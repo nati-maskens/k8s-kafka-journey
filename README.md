@@ -32,7 +32,7 @@
    ```
    I'm using [**flannel**](https://github.com/flannel-io/flannel)
    So take the command from [here, see `kubectl apply ...` command](https://github.com/flannel-io/flannel#deploying-flannel-manually)  
-   See section about flanned, it's important.
+   See section about flannel, it's important.
 1. Now cluster have to work. Check:  
    ```bash
    $ kubectl get pods --all-namespaces
