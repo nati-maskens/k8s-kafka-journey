@@ -88,9 +88,41 @@ I'm pretty sure that `kubeadm` can get a flag to set that field specifically. So
   ```
   I'm not sure if it will remove the corresponding ip tables routes though...
 
+## Going on to VirtualBox:
+### Networking
+2 Adapters:
+1. The usual NAT, to let the VM connect to outside world.
+2. The "Host Only" to give the VM static connection with host without port forwarding.
+```
+VBoxManage list vms
+```
+To start that VM headless:
+```
+VBoxHeadless -s <vm>
+```
+### Kubeadm
+The seemingly static succefull one:
+```bash
+$ kubeadm init --pod-network-cidr='10.85.0.0/16' --apiserver-advertise-address=192.168.56.10
+# --apiserver-advertise-address is The static ip of the vm in the host vboxnet0 adapter.
+# The cidr is for inner use of the k8s inner network. an be something that doesn't collide
+```
+
+Do the other steps, of course: Connect the kubectl and apply network plugin.
+You can now take the admin config from the kubeadm output and use it at the host to connect to the vm cluster.
+
+No pods will run on the master/control-plane node by default.  
+Remove the taint:
+``` bash
+$ kubectl taint nodes k8s-control-plane-01 node-role.kubernetes.io/master-
+```
+The minus at the end is "Remove that taint"
 ### Useful resources:
 - [`kubeadm` cluster create](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm)
 - [`kubeadm` ref](https://kubernetes.io/docs/reference/setup-tools/kubeadm)
 - [Arch Linux K8S](https://wiki.archlinux.org/title/Kubernetes)
+- [Good Pods overview](https://kubernetes.io/docs/tutorials/kubernetes-basics/explore/explore-intro)
+- [Good Services overview](https://kubernetes.io/docs/tutorials/kubernetes-basics/expose/expose-intro)
+- [Into to scale tutorial](https://kubernetes.io/docs/tutorials/kubernetes-basics/scale/scale-intro)
 
 -- By Nati Maskens
