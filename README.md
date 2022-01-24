@@ -54,7 +54,7 @@ You need to edit that `kube-flannel.yml` file before, so download it and change 
    Change it that it will match the `--pod-network-cidr` from the `kubeadm init` command.
 1. **Use the VM's static network interfaces**  
    The flannel have to use the virtualbox inner static "Host Only" network, so that the VM and nodes outside could talk.  
-   Also note that the `flanneld` service will get created at the control-plane and then copied to every joining node,
+   Also note that the `flanneld` service will get created at the control-plane and then copied to every joining node (since it's a [DaemonSet](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)),
    so one value (for example, the interface name within the VM) won't be enough because it won't match the outside (host?) node interface,
    so we need to use multiple values.  
    Add those inteface names to the section of the kind: `DaemonSet` at `spec`.`template`.`spec`.`containers` to the container named `kube-flannel`
@@ -158,9 +158,11 @@ At the joining node.
 - [`kubeadm` cluster create](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm)
 - [`kubeadm` ref](https://kubernetes.io/docs/reference/setup-tools/kubeadm)
 - [Arch Linux K8S](https://wiki.archlinux.org/title/Kubernetes)
+- [Official Tutorials Home](https://kubernetes.io/docs/tutorials/kubernetes-basics/)
 - [Good Pods overview](https://kubernetes.io/docs/tutorials/kubernetes-basics/explore/explore-intro)
 - [Good Services overview](https://kubernetes.io/docs/tutorials/kubernetes-basics/expose/expose-intro)
 - [Intro to scale tutorial](https://kubernetes.io/docs/tutorials/kubernetes-basics/scale/scale-intro)
+- [Amazing `kubectl` CheetSheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/)
 - [SystemD units ref](https://www.freedesktop.org/software/systemd/man/systemd.service.html)
 
 -- By Nati Maskens
