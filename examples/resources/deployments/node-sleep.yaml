@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: node-test-main
-          image: http://docker-registry.registries/lts
+          image: node:lts
           imagePullPolicy: IfNotPresent
           command: [ "/bin/bash", "-c", "--" ]
           args: [ "while true; do sleep 30; done;" ]

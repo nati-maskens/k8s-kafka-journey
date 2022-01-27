@@ -1,0 +1,6 @@
+persistence:
+  existingClaim: kafka-storage-claim
+
+zookeeper:
+  persistence:
+    enabled: false

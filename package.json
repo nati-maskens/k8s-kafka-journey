@@ -1,0 +1,29 @@
+{
+  "name": "k8s-kafka-journey",
+  "version": "1.0.0",
+  "description": "K8S and Kafka Journy. A project log",
+  "main": "index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nati-maskens/k8s-kafka-journey.git"
+  },
+  "keywords": [
+    "Kubernetes",
+    "Kafka"
+  ],
+  "author": "Tabit INC",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/nati-maskens/k8s-kafka-journey/issues"
+  },
+  "homepage": "https://github.com/nati-maskens/k8s-kafka-journey#readme",
+  "dependencies": {
+    "kafkajs": "^1.15.0"
+  }
+}
