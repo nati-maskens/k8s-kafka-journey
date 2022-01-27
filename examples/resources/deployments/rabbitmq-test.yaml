@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq-test
+  labels:
+    app: rabbitmq-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq-test
+  template:
+    metadata:
+      labels:
+        app: rabbitmq-test
+    spec:
+      volumes:
+        - name: rabbitmq-test-storage
+          persistentVolumeClaim:
+            claimName: rabbit-storage-claim
+      containers:
+        - name: rabbitmq-test-main
+          image: rabbitmq:3.9-management
+          imagePullPolicy: IfNotPresent
+          # command: [ "/bin/bash", "-c", "--" ]
+          # args: [ "while true; do sleep 30; done;" ]
+          env:
+            - name: RABBITMQ_NODENAME
+              value: dev@localhost
+          volumeMounts:
+            - mountPath: /var/lib/rabbitmq
+              name: rabbitmq-test-storage
+      restartPolicy: Always
