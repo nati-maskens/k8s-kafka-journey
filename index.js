@@ -1,9 +1,9 @@
-const { Kafka } = require('kafkajs')
+const { Kafka } = require('kafkajs');
 
 const kafka = new Kafka({
     clientId: 'my-app',
     brokers: ['kafka-test-2:9092']
-})
+});
 
 const consumer = kafka.consumer({ groupId: 'test-group' })
 
@@ -24,7 +24,12 @@ const run = async () => {
 
 }
 
+process.on('SIGINT', () => {
+    console.log('Exiting cleanly...');
+    consumer.disconnect().then(() => process.exit());
+});
+
 run().catch(err => {
-    console.log('moo');
+    console.log('Known error.');
     console.error(err);
 });

@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/nati-maskens/k8s-kafka-journey#readme",
   "dependencies": {
-    "kafkajs": "^1.15.0"
+    "kafkajs": "^2.0.0",
+    "nanoid": "^3.3.4"
   }
 }

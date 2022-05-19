@@ -24,9 +24,16 @@ spec:
             - "-c"
             - "echo Container started\ntrap \"exit 0\" 15\n\nexec \"$@\"\nwhile sleep 1 & wait $!; do :; done"
             - "-"
+          workingDir: /home/node/projects
           volumeMounts:
-            - mountPath: /home/node/projects
+            - mountPath: /home/node/projects/k8s-kafka-journey
               name: dev-projects
+          resources:
+            limits:
+              cpu: "6.0"
+              memory: "8Gi"
+          securityContext:
+            runAsUser: 1000 # node
       volumes:
         - name: dev-projects
           persistentVolumeClaim:

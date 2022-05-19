@@ -10,17 +10,23 @@ const producer = kafka.producer();
 const run = async () => {
 
     // Producing
-    await producer.connect()
+    await producer.connect();
+
+    const message = { value: 'Bimbom' };
+
+    // console.log('argv:', process.argv);
+    if (process.argv[2]) message.key = process.argv[2];
+    if (process.argv[3]) message.value = process.argv[3];
+
     await producer.send({
         topic: 'test-topic',
-        messages: [
-            { value: 'Bimbom' },
-        ],
+        messages: [ message ],
     });
+    await producer.disconnect();
 
 }
 
 run().catch(err => {
-    console.log('moo');
+    console.log('Known error.');
     console.error(err);
 });
