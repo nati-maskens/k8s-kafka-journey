@@ -17,6 +17,7 @@ const run = async () => {
             console.log({
                 partition,
                 offset: message.offset,
+                key: message.key.toString(),
                 value: message.value.toString(),
             })
         },
@@ -25,7 +26,7 @@ const run = async () => {
 }
 
 process.on('SIGINT', () => {
-    console.log('Exiting cleanly...');
+    console.log('\nExiting cleanly...');
     consumer.disconnect().then(() => process.exit());
 });
 

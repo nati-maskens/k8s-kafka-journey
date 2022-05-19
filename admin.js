@@ -18,7 +18,7 @@ const run = async () => {
         topicPartitions: [
             {
                 topic: 'test-topic',
-                count: 2,
+                count: 3,
             }
         ],
     });
