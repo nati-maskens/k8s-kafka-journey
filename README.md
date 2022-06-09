@@ -1,27 +1,45 @@
 # K8S And Kafka Journey
 
-## Local K8S using `kubeadm`
+## Local K8S using `kubeadm`, VirtualBox and `containerd`
 
 ### Installation, Cluster setup
 
 #### Installation Dependecies
 
 1. Need to install `kubelet` (the main service), `kubeadm` (the init tool) and `kubectl` (the management tool).
-1. I have [`cni-plugins`](https://github.com/containernetworking/plugins) installed. Not sure yet if this is a real dependency.
-1. I do **not** need to have local `etcd`. Its getting deployed within cluster.
+1. Need to install `containerd`. Docker is deprecated with K8s version v1.24+.
+1. I think you need to install [`cni-plugins`](https://github.com/containernetworking/plugins), Arch Linux link: [`cni-plugins`](https://archlinux.org/packages/community/x86_64/cni-plugins).  
+Maybe flannel is doing it alone on deployment into the cluster, I'm not sure.
+1. I did **not** need to have local `etcd`. Its getting deployed within cluster.
 
-#### Before Init
-1. Swap has to be off.
-1. Start `kubelet` service. If k8s was already initialized this is how you run it.  
+#### Pre Init setup
+1. Install and setup VirtualBox, see below **"VirtualBox Setup"** section, for networking. The following steps has to be done on both VM for control plane and any other local node:
+1. Swap has to be off. K8s and Swap are NOT working together.
+1. `containerd` is coming not fully configured to work with `systemd`. Steps to do:
+   * Make the default config a file, located at the default place for the config:
+      ```bash
+      $ mkdir /etc/containerd
+      $ containerd config default > /etc/containerd/config.toml
+      ```
+      (You'll may have to run `containerd` once in order that the above command will work)
+   * Now edit the file, at the section (which **has** to be there) called:  
+      `[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]`
+      Change `SystemdCgroup` to `true` and save the file.
+   * Restart `containerd` service.
+1. Start and enable `kubelet` service. If k8s was already initialized this is how you run it.  
    If it was not initialized, `kubelet` will fail until there will be configurations in place, and that's ok.
 
 #### Init cluster (with the control plane)
 
-1. I managed to do it only with VM. Please follow first steps at the "**Going on to VirtualBox**" section.
-1. You need some clean space before initialization. See reset.
-1. Run the init command from the "`kubeadm init` with VM" section, inside the VM.  
-   There is a parameter in that command named "`pod-network-cidr`" please remember it.  
-   P.S. I think that this cidr will work because of [`cni-plugins`](https://github.com/containernetworking/plugins). I'm not sure.
+1. You need a clean state before initialization. Google for `kubeadm reset`.
+1. Init cluster with **`kubeadm`**:
+   ```bash
+   $ kubeadm init --pod-network-cidr='10.85.0.0/16' --apiserver-advertise-address=192.168.56.10 --cri-socket=unix:///run/containerd/containerd.sock
+   # --apiserver-advertise-address is The static ip of the vm in the host vboxnet0 adapter.
+   # The CIDR is for inner use of the k8s inner network. Can be anything that doesn't collide.
+   # Take note of the CIDR. It'll be used later.
+   # --cri-socket is the containerd networking socket
+   ```
 1. You first need to assign (connect) the `kubectl` management tool to the local k8s, so do as the `kubeadm` output says
    and copy the cluster and context and user data to the VM's **and** the **local** `~/.kube/config` so that `kubectl` will work on the VM cluster.
 1. Check `current-context` at the `~/.kube/config` file, in case you have many contexts.
@@ -68,45 +86,6 @@ You need to edit that `kube-flannel.yml` file before, so download it and change 
 **Why** are those things not carefully documented?!! Do you want us to use your software Flannel guys, or just to spit blood? By the beard of Achashverosh it took me five hours to find out the whole thing.
 
 Now please apply the Flannel network plugin `kubectl apply` using the updated `kube-flannel.yml` file. Example of it are put here for reference.  
-You thought this is the end of the story? nope.
-
-At first it was **not working** for me. `kubelet` outputs something like:
-```
-failed to find plugin \"flannel\" in path [/usr/lib/cni]
-```
-And:
-```
-message:docker: network plugin is not ready: cni config uninitialized
-```
-I first did this: [Arch linux about bug with flannel and systemd network](https://wiki.archlinux.org/title/Kubernetes#Troubleshooting). (See about flannel).
-
-Then I found that it was also about that `/usr/lib/cni` path.  
-There is an environment variable passed to `kubelet` service, which was:
-```
-KUBELET_ARGS=--cni-bin-dir=/usr/lib/cni
-```
-The value `--cni-bin-dir=/usr/lib/cni` was appended to the `kubelet` execute command. This was **not good** because after deploying the Flannel it was copying the binary into to **host to a different path:** `/opt/cni/bin`, as we can see [here](https://github.com/flannel-io/flannel/blob/37f29499b49e2e1bc0de6f48ea5562149bb38ae2/Documentation/kube-flannel.yml#L178).  
-This env variable is going into the `kubelet` service unit as [`EnvironmentFile`](https://www.freedesktop.org/software/systemd/man/systemd.exec.html#EnvironmentFile=) so doing a [drop in edit to the unit](https://wiki.archlinux.org/title/systemd#Drop-in_files) with the specific `Environment=` was not working because it gets overrided by this file:
-```
-/etc/kubernetes/kubelet.env
-```
-#### Temporary solution:
-Just to check if it's working, was to change the above file to have:
-```
-KUBELET_ARGS=--cni-bin-dir=/opt/cni/bin
-```
-Then restart the service, and it worked.
-You can check the real arguments passed to the kubelet using:
-```bash
-$ systemctl status kubelet
-```
-Look at the exec command at `CGroup:` section. You can also take the `pid` and do:
-```
-$ sudo strings /proc/<kubelet-pid>/environ
-```
-~~Of course - This solution **will not hold** because most surely `kubeadm` is creating and changing that file again. TODO: Check it.  
-I'm pretty sure that `kubeadm` can get a flag to set that field specifically. So, TODO...~~  
-EDIT: I found that kubeadm is really using this file to make the `kubelet` command, so maybe after all this is a correct solution, who knows...
 
 #### Notes
 - Flannel is using a pod within the cluster. Maybe to troubleshoot you need to kill it and let k8s bringing it up again, see [here](https://wiki.archlinux.org/title/Kubernetes#Troubleshooting).
@@ -118,7 +97,7 @@ EDIT: I found that kubeadm is really using this file to make the `kubelet` comma
 - sometimes you have to clean up the `flannel.1` and the `cni0` network interfaces and restart kubelet to let the flanned pods create those again.
   Do it if you encounter errors like "cni already have address bla bla"
 
-## Going on to VirtualBox
+## VirtualBox Setup
 ### Networking
 2 Adapters:
 1. The usual NAT, to let the VM connect to outside world.
@@ -130,17 +109,7 @@ To start that VM headless:
 ```
 VBoxHeadless -s <vm>
 ```
-### `kubeadm init` with VM:
-The seemingly static succesfull one:
-```bash
-$ kubeadm init --pod-network-cidr='10.85.0.0/16' --apiserver-advertise-address=192.168.56.10
-# --apiserver-advertise-address is The static ip of the vm in the host vboxnet0 adapter.
-# The cidr is for inner use of the k8s inner network. an be something that doesn't collide
-```
-
-Do the other steps, of course: Connect the kubectl and apply network plugin.
-You can now take the admin config from the kubeadm output and use it at the host to connect to the vm cluster.
-
+### Post setup, and other nodes:
 No pods will run on the master/control-plane node by default.  
 Remove the taint:
 ``` bash
@@ -149,7 +118,7 @@ $ kubectl taint nodes k8s-control-plane-01 node-role.kubernetes.io/master-
 The minus at the end is "Remove that taint"
 ### Join Node
 - The joined node has to publish it's static VM related network ip, so you need to add 
-  `--node-ip=192.168.56.1` (or the correct node static ip at the `vboxnet0` iface) to the `KUBELET_ARGS=` arguments.
+  `--node-ip=192.168.56.1` (or the correct node static ip at the `vboxnet0` iface) to the `KUBELET_ARGS=` arguments, at the config file: `/etc/kubernetes/kubelet.env`
 ```
 /etc/kubernetes/kubelet.env
 ```
