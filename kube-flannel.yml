@@ -204,11 +204,11 @@ spec:
         - --iface=vboxnet0
         resources:
           requests:
-            cpu: "100m"
-            memory: "50Mi"
+            cpu: "1000m"
+            memory: "2048Mi"
           limits:
-            cpu: "100m"
-            memory: "50Mi"
+            cpu: "1000m"
+            memory: "2048Mi"
         securityContext:
           privileged: false
           capabilities:

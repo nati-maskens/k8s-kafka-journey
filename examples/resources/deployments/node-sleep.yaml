@@ -14,6 +14,15 @@ spec:
       labels:
         app: node-test
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - tabit-dell-001
       containers:
         - name: node-test-main
           image: node:lts

@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cron-node-scheduler
+  labels:
+    app: cron-node-scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cron-node-scheduler
+  template:
+    metadata:
+      labels:
+        app: cron-node-scheduler
+    spec:
+      containers:
+        - name: cron-node-scheduler-main
+          image: 101444535047.dkr.ecr.eu-west-1.amazonaws.com/nati-cron-scheduler@sha256:1fdfe210b087edb83a7969a05c774cf1edededb4e35b17264823ade591532e03
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              memory: "2048Mi"
+            limits:
+              cpu: "1000m"
+              memory: "2048Mi"
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: aws-regred
