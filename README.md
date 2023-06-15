@@ -123,7 +123,30 @@ The minus at the end is "Remove that taint"
 /etc/kubernetes/kubelet.env
 ```
 At the joining node.
-### Useful resources:
+
+## Maintenance
+The certificates created by kubeadm for TLS connection will be expired after a year.
+There are [many solutions](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/), but they will get **renewed** automatically when **upgrading** the control-place (plus the core pods).
+
+### Upgrade
+Upgrading `kubelet`, `kubectl` or `kubeadm` software will **not** upgrade to control plane, api server, and the other pods which makes the cluster.
+
+You need to do upgrade from time to time to don't let the gap between the software and the containers versions grow.
+
+Follow upgrade instructions:  
+https://v1-25.docs.kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/
+
+Basically you have to:
+```
+# kubeadm upgrade plan
+```
+and then
+```
+kubeadm upgrade apply v1.2x.x
+```
+This will also **renew** the TLS certificates (as said above) so if you do it once a year you will save yourself the connection failure after these will expire.
+
+## Useful resources:
 - [`kubeadm` cluster create](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm)
 - [`kubeadm` ref](https://kubernetes.io/docs/reference/setup-tools/kubeadm)
 - [Arch Linux K8S](https://wiki.archlinux.org/title/Kubernetes)
